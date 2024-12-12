@@ -1,10 +1,10 @@
 package Learn_spring_security.Learn_spring_security.models;
 
-import lombok.Getter;
-import lombok.Setter;
+    import lombok.Getter;
+    import lombok.Setter;
 
-@Getter
-@Setter
+    @Getter
+    @Setter
 public class ComanReqModel {
     private String username ;
     private String email ;

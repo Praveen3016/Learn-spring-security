@@ -10,8 +10,10 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.web.DefaultSecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 public class SecurityConfiguration {
@@ -19,18 +21,27 @@ public class SecurityConfiguration {
     @Autowired
     private UserDetailsService userDetailsService;
 
+    @Autowired
+    private JwtFilter jwtFilter;
+
     @Bean
     public DefaultSecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(Customizer.withDefaults())
-                .authorizeHttpRequests(request -> request.anyRequest().authenticated());
+                .authorizeHttpRequests(request -> request
+                        .requestMatchers("/user/register" , "/user/login")
+                        .permitAll()
+                        .anyRequest().authenticated())
+                .addFilterBefore(jwtFilter , UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setPasswordEncoder(NoOpPasswordEncoder.getInstance());
+//        provider.setPasswordEncoder(NoOpPasswordEncoder.getInstance());   when encription not added ;
+        provider.setPasswordEncoder(new BCryptPasswordEncoder(10));
         provider.setUserDetailsService(userDetailsService);
         return provider;
     }

@@ -4,8 +4,13 @@ import Learn_spring_security.Learn_spring_security.Repository.UserRepo;
 import Learn_spring_security.Learn_spring_security.entity.user;
 import Learn_spring_security.Learn_spring_security.models.ComanReqModel;
 import Learn_spring_security.Learn_spring_security.models.CommonRespModal;
+import Learn_spring_security.Learn_spring_security.models.UserModel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.* ;
 
@@ -17,8 +22,14 @@ public class UserService {
     private UserRepo userRepo ;
 
     @Autowired
+    private  JWTService jwtService ;
+
+    @Autowired
     private CommonRespModal commonRespModal;
 
+    private BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(10);
+    @Autowired
+    private AuthenticationManager authenticationManager ;
 
     public CommonRespModal addNewUser(ComanReqModel reqModel) {
 
@@ -32,7 +43,7 @@ public class UserService {
 
             user.setUsername(reqModel.getUsername());
             user.setEmail(reqModel.getEmail());
-            user.setPassword(reqModel.getPassword());
+            user.setPassword(encoder.encode(reqModel.getPassword()));
             user.setMobile(reqModel.getMobile());
             user.setCity(reqModel.getCity());
 
@@ -73,4 +84,15 @@ public class UserService {
         return commonRespModal;
     }
 
+
+
+    public String verify(UserModel user) {
+        Authentication authentication =
+                authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername() , user.getPassword()) );
+
+        if(authentication.isAuthenticated()){
+            return jwtService.generateToken(user.getUsername());
+        }
+        return "failed" ;
+    }
 }
